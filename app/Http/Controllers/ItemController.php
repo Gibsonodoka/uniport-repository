@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use App\Models\Item;
 use App\Models\Category;
 use App\Models\Person;
-use App\Http\Requests\StoreItemRequest;
 use Illuminate\Support\Facades\Storage;
 
 class ItemController extends Controller
@@ -17,33 +16,58 @@ class ItemController extends Controller
         $this->middleware(['auth'])->except(['show', 'search']);
     }
 
-    // Show submission form
+    /**
+     * Show submission form.
+     */
     public function create()
     {
         $categories = Category::orderBy('order')->get();
-        return view('items.create', compact('categories'));
+        return view('user.create', compact('categories'));
     }
 
-    // Store new item
-    public function store(StoreItemRequest $request)
+    /**
+     * Store a new user submission (defaults to pending).
+     */
+    public function store(Request $request)
     {
-        $item = Item::create($request->safe()->except('files') + ['created_by' => auth()->id()]);
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'abstract' => 'nullable|string',
+            'year' => 'nullable|digits:4',
+            'type' => 'required|string',
+            'course_code' => 'nullable|string|max:10',
+            'supervisor' => 'nullable|string|max:255',
+            'category_id' => 'required|integer|exists:categories,id',
+            'files.*' => 'nullable|file|max:10240', // 10MB limit
+        ]);
 
-        // Attach authors (students)
+        $item = Item::create([
+            'title' => $request->title,
+            'abstract' => $request->abstract,
+            'year' => $request->year,
+            'type' => $request->type,
+            'course_code' => $request->course_code,
+            'supervisor' => $request->supervisor,
+            'category_id' => $request->category_id,
+            'created_by' => auth()->id(),
+            'status' => 'pending', // all new submissions must be approved
+        ]);
+
+        // Attach authors
         if ($request->filled('authors')) {
             foreach ($request->input('authors') as $name) {
                 if (!$name) continue;
-                $p = Person::firstOrCreate(['name' => trim($name)]);
-                $item->people()->attach($p->id, ['role' => 'author']);
+                $person = Person::firstOrCreate(['name' => trim($name)]);
+                $item->people()->attach($person->id, ['role' => 'author']);
             }
         }
 
-        // Attach supervisors (faculty)
+        // Attach supervisors
         if ($request->filled('supervisors')) {
             foreach ($request->input('supervisors') as $name) {
                 if (!$name) continue;
-                $p = Person::firstOrCreate(['name' => trim($name), 'affiliation' => 'faculty']);
-                $item->people()->attach($p->id, ['role' => 'supervisor']);
+                $person = Person::firstOrCreate(['name' => trim($name), 'affiliation' => 'faculty']);
+                $item->people()->attach($person->id, ['role' => 'supervisor']);
             }
         }
 
@@ -60,10 +84,13 @@ class ItemController extends Controller
             }
         }
 
-        return redirect()->route('items.show', $item)->with('success', 'Item created.');
+        return redirect()->route('user.dashboard')
+            ->with('success', 'Your submission has been sent and is pending admin approval.');
     }
 
-    // Detect media type
+    /**
+     * Detect media type from MIME.
+     */
     private function kindFromMime(?string $mime): string
     {
         return match (true) {
@@ -75,41 +102,43 @@ class ItemController extends Controller
         };
     }
 
-    // Show a single item
+    /**
+     * Display an individual item.
+     */
     public function show(Item $item)
     {
         $item->load(['category.parent', 'media', 'people']);
-        abort_if($item->status !== 'published' && !auth()->check(), 404);
+
+        // Restrict unpublished access
+        abort_if($item->status !== 'approved' && !auth()->check(), 404);
 
         return view('items.show', compact('item'));
     }
 
-    // Search items
+    /**
+     * Search items (frontend/public search).
+     */
     public function search(Request $request)
     {
-        $q = Item::published()->with('category');
+        $query = Item::where('status', 'approved')->with('category');
 
         if ($s = $request->input('q')) {
-            $q->where(function ($qq) use ($s) {
-                $qq->where('title', 'like', "%$s%")
-                   ->orWhere('abstract', 'like', "%$s%")
-                   ->orWhere('course_code', 'like', "%$s%");
+            $query->where(function ($q) use ($s) {
+                $q->where('title', 'like', "%$s%")
+                  ->orWhere('abstract', 'like', "%$s%")
+                  ->orWhere('course_code', 'like', "%$s%");
             });
         }
 
-        if ($y = $request->integer('year')) {
-            $q->where('year', $y);
+        if ($year = $request->integer('year')) {
+            $query->where('year', $year);
         }
 
-        if ($t = $request->input('type')) {
-            $q->where('type', $t);
+        if ($type = $request->input('type')) {
+            $query->where('type', $type);
         }
 
-        if ($c = $request->input('course')) {
-            $q->where('course_code', $c);
-        }
-
-        $items = $q->latest()->paginate(24)->withQueryString();
+        $items = $query->latest()->paginate(24)->withQueryString();
 
         return view('items.search', compact('items'));
     }
