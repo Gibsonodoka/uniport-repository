@@ -19,7 +19,7 @@
                 <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'text-blue-700 font-semibold' : 'hover:text-blue-700' }}">Home</a>
                 <a href="{{ route('items.search') }}" class="{{ request()->routeIs('items.search') ? 'text-blue-700 font-semibold' : 'hover:text-blue-700' }}">Search</a>
                 <a href="{{ route('categories.show', 'collections') }}" class="{{ request()->is('collections*') ? 'text-blue-700 font-semibold' : 'hover:text-blue-700' }}">Collections</a>
-                <a href="#" class="hover:text-blue-700">About</a>
+                <a href="{{ route('about') }}" class="{{ request()->routeIs('about') ? 'text-blue-700 font-semibold' : 'hover:text-blue-700' }}">About</a>
             </div>
 
             <!-- Right: Auth Buttons -->

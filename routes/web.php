@@ -12,6 +12,8 @@ Route::get('/', [CategoryController::class, 'index'])->name('home');
 Route::get('/collections/{category:slug}', [CategoryController::class, 'show'])->name('categories.show');
 Route::get('/search', [ItemController::class, 'search'])->name('items.search');
 Route::get('/items/{item}', [ItemController::class, 'show'])->name('items.show');
+Route::view('/about', 'about')->name('about');
+
 
 // Authenticated User Routes
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -33,7 +35,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware(['auth', 'verified'])->prefix('admin')->group(function () {
     Route::get('/', [AdminController::class, 'index'])->name('admin.dashboard');
     Route::get('/submissions', [AdminController::class, 'submissions'])->name('admin.submissions');
+
+    // Category Management
     Route::get('/categories', [AdminController::class, 'categories'])->name('admin.categories');
+    Route::post('/categories', [AdminController::class, 'storeCategory'])->name('admin.categories.store');
+    Route::delete('/categories/{category}', [AdminController::class, 'deleteCategory'])->name('admin.categories.delete');
+
+    // Admin Create Submission
+    Route::get('/create', [AdminController::class, 'createItem'])->name('admin.items.create');
+    Route::post('/create', [AdminController::class, 'storeItem'])->name('admin.items.store');
+
     Route::patch('/approve/{item}', [AdminController::class, 'approve'])->name('admin.approve');
 });
 
