@@ -6,7 +6,7 @@ This system enables users to browse, upload, and manage academic content within 
 
 ---
 
-## 🧠 Overview
+## Overview
 
 The **Uniport Repository System** provides a secure and organized environment for managing academic works.  
 It supports student submissions, staff uploads, category-based organization, and user authentication — all integrated into a clean, modern interface.
