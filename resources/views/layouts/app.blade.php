@@ -5,8 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Faculty Repository') }}</title>
-
+    {{-- Dynamic Page Title --}}
+    <title>
+        @hasSection('title')
+            @yield('title') - Uniport Open Directory
+        @else
+            Uniport Open Directory
+        @endif
+    </title>
+    <link rel="icon" type="image/png" href="{{ Vite::asset('resources/images/favicon.png') }}">
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />

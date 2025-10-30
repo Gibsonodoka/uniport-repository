@@ -1,4 +1,5 @@
 <x-app-layout>
+    @section('title', 'About')
     <section class="relative bg-gradient-to-br from-blue-50 via-white to-blue-100 min-h-screen py-16">
         <div class="max-w-6xl mx-auto px-6 lg:px-8">
 
@@ -97,11 +98,6 @@
                         Submit Your Work →
                     </a>
                 </div>
-            </div>
-
-            {{-- Footer --}}
-            <div class="text-center text-sm text-gray-500 mt-16">
-                <p>© {{ date('Y') }} University of Port Harcourt Repository. Built with ❤️ by the Class of 2025.</p>
             </div>
 
         </div>

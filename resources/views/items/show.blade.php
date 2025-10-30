@@ -18,7 +18,7 @@
                 · {{ $item->course_code }}
             @endif
             @if($item->category)
-                · In 
+                · In
                 <a class="underline text-blue-700 hover:text-blue-900"
                    href="{{ route('categories.show', $item->category->slug) }}">
                     {{ $item->category->name }}
@@ -66,30 +66,21 @@
             </div>
 
             @if($item->media->count())
-                <div class="space-y-2 mt-4">
+                <div class="space-y-3 mt-4">
                     @foreach($item->media as $file)
                         <template x-if="filter==='all' || filter==='{{ $file->kind }}'">
-                            <div class="flex items-center justify-between border rounded px-3 py-2 bg-white hover:bg-gray-50 transition">
-                                <div>
-                                    <p class="font-medium text-gray-800 text-sm">{{ basename($file->path) }}</p>
-                                    <p class="text-xs text-gray-500">
-                                        {{ strtoupper($file->kind) }} · {{ number_format(($file->size_bytes ?? 0)/1024,1) }} KB
-                                    </p>
+                            <div class="flex items-center justify-between border rounded px-3 py-3 bg-white hover:bg-gray-50 transition">
+                                <div class="flex-1">
+                                    {{-- File name hidden --}}
                                 </div>
 
                                 <div class="text-right">
                                     @auth
-                                        @if($file->kind === 'pdf')
-                                            <button @click="openModal('{{ asset('storage/' . $file->path) }}')"
-                                                    class="text-blue-700 hover:text-blue-900 underline text-xs">
-                                                Read
-                                            </button>
-                                        @else
-                                            <a href="{{ asset('storage/' . $file->path) }}" target="_blank"
-                                               class="text-blue-700 hover:text-blue-900 underline text-xs">
-                                                View / Download
-                                            </a>
-                                        @endif
+                                        <a href="{{ asset('storage/' . $file->path) }}"
+                                           target="_blank"
+                                           class="bg-blue-700 hover:bg-blue-800 text-white text-xs font-medium px-3 py-1.5 rounded transition">
+                                           Open File
+                                        </a>
                                     @else
                                         <span class="text-gray-400 text-xs">
                                             <a href="{{ route('login') }}" class="underline text-blue-700 hover:text-blue-900">
@@ -108,8 +99,8 @@
             @endif
         </div>
 
-        {{-- PDF Reader Modal --}}
-        <div x-show="open"
+        {{-- PDF Reader Modal (desktop only) --}}
+        <div x-show="open && window.innerWidth >= 768"
              x-cloak
              class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
              @keydown.escape.window="closeModal()">
